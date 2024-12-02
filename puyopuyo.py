@@ -43,7 +43,7 @@ PUYO_EMOJIS = {
 PUYO_TEXT = {
     1: "⊚",              # Small Garbage Puyo
     6: "⚪",       # Large Garbage Puyo (6 small ones)
-    30: "🔴",            # Red nuisance puyo (rock)
+    30: "♪",            # Red nuisance puyo (rock)
     90: "⭐",            # Star Puyo
     180: "🌙",           # Moon Puyo
     360: "☄️",          # Comet Puyo
