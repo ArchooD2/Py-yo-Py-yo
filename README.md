@@ -1,6 +1,6 @@
 # PuyoPuyo
 
-**PuyoPuyo** is a Python implementation of the popular falling-block puzzle game, Puyo Puyo. This repository includes various scripts to run, train, and explore AI-based strategies for the game.
+**PuyoPuyo** is a Python implementation of the popular falling-block puzzle game, Puyo Puyo. This repository includes various scripts to run, train, and will eventually explore AI-based strategies for the game.
 
 ## Table of Contents
 - [Features](#features)
@@ -13,9 +13,7 @@
 
 ## Features
 - A fully functional Puyo Puyo game implemented in Python.
-- Includes AI logic and training scripts for neural network-based gameplay.
-- Gradient-based visualization for enhanced gameplay experience.
-- Nuisance management to simulate obstacles in the game.
+- Nuisance display to simulate sending garbage in the game.
 
 ---
 
