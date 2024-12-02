@@ -3,9 +3,11 @@ import random
 from collections import deque
 import copy
 from time import sleep as wait
+
 # Initialize pygame
 pygame.init()
 crazy = False  # Set to True to enable crazy mode
+
 # Constants
 GRID_WIDTH, GRID_HEIGHT = 6, 12
 TILE_SIZE = 40
@@ -14,6 +16,7 @@ SCREEN_HEIGHT = (GRID_HEIGHT + 2) * TILE_SIZE
 FPS = 60
 COLORS = ["red", "green", "blue", "yellow"]
 EMPTY = None
+
 # Full mapping of nuisance Puyo values to their emoji representations
 PUYO_EMOJIS = {
     1: "Nuisance_small_puyo4.png",
@@ -89,6 +92,7 @@ def get_puyo_text(nuisance_count):
 # Animation Constants
 POP_TIME = 0.7  # Duration of the pop animation in seconds
 last_nuisance = []  # To store the last nuisance text and images to display
+
 # Scoring Constants
 CHAIN_BONUS = [0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256]
 COLOR_BONUS = [0, 3, 6, 12, 24]
@@ -148,8 +152,10 @@ class GameState:
                 if self.is_valid_move(self.current_puyo, dx=1):
                     for puyo in self.current_puyo:
                         puyo[0] += 1
-            elif action == 'rotate':
-                self.rotate_puyo()
+            elif action == 'rotate_cw':  # Clockwise rotation
+                self.rotate_puyo(clockwise=True)
+            elif action == 'rotate_ccw':  # Counter-clockwise rotation
+                self.rotate_puyo(clockwise=False)
             elif action == 'drop':
                 self.drop_puyo()
             elif action == 'hard_drop':
@@ -165,6 +171,7 @@ class GameState:
             else:
                 for puyo in self.current_puyo:
                     puyo[1] += 1
+
     def hard_drop(self):
         if self.current_puyo:
             while self.is_valid_move(self.current_puyo, dy=1):
@@ -174,14 +181,19 @@ class GameState:
             self.current_puyo = None
             self.chain_count = 0
             self.resolve()
-    def rotate_puyo(self):
+
+    def rotate_puyo(self, clockwise=True):
         if self.current_puyo:
             pivot = self.current_puyo[0]
             satellite = self.current_puyo[1]
             dx = satellite[0] - pivot[0]
             dy = satellite[1] - pivot[1]
-            new_dx = -dy
-            new_dy = dx
+            if clockwise:
+                new_dx = -dy
+                new_dy = dx
+            else:  # Counter-clockwise
+                new_dx = dy
+                new_dy = -dx
             new_satellite = [pivot[0] + new_dx, pivot[1] + new_dy, satellite[2]]
             if self.is_valid_position(new_satellite[0], new_satellite[1]):
                 self.current_puyo[1] = new_satellite
@@ -392,6 +404,7 @@ class PuyoGame:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.state.running = False
+
     def is_running(self):
         return self.state.is_running()
 
@@ -416,7 +429,11 @@ def main():
                 elif event.key == pygame.K_DOWN:
                     game.process_input('drop')
                 elif event.key == pygame.K_UP:
-                    game.process_input('rotate')
+                    game.process_input('rotate_cw')
+                elif event.key == pygame.K_z:  # Clockwise rotation (Z)
+                    game.process_input('rotate_cw')
+                elif event.key == pygame.K_x:  # Counter-clockwise rotation (X)
+                    game.process_input('rotate_ccw')
                 elif event.key == pygame.K_SPACE:
                     game.state.hard_drop()
             elif event.type == pygame.QUIT:
