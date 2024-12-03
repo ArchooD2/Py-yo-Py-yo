@@ -337,6 +337,7 @@ class PuyoGame:
     def __init__(self):
         global lastgrid
         self.state = GameState()
+        self.is_down_pressed = False  # Track if the down arrow is pressed
         # Initialize pygame elements
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Puyo Puyo")
@@ -430,7 +431,12 @@ class PuyoGame:
     def update(self):
         delta_time = self.clock.tick(FPS) / 1000.0  # Convert to seconds
         if not self.state.clearing:
-            self.state.fall_timer += 1
+            if self.is_down_pressed:
+                # If down arrow is pressed, move at 4x speed
+                self.state.fall_timer += 5
+            else:
+                self.state.fall_timer += 1
+
             if self.state.fall_timer >= self.state.fall_speed:
                 self.state.drop_puyo()
                 self.state.fall_timer = 0
@@ -449,6 +455,7 @@ class PuyoGame:
                     elif event.key == pygame.K_RIGHT:
                         self.process_input('right')
                     elif event.key == pygame.K_DOWN:
+                        self.is_down_pressed = True  # Start fast drop
                         self.process_input('drop')
                     elif event.key == pygame.K_UP:
                         self.process_input('rotate_cw')
@@ -456,8 +463,6 @@ class PuyoGame:
                         self.process_input('rotate_cw')
                     elif event.key == pygame.K_x:  # Counter-clockwise rotation (X)
                         self.process_input('rotate_ccw')
-                    #elif event.key == pygame.K_SPACE:
-                    #    self.state.hard_drop()
                 else:  # Game over or paused state
                     if event.key == pygame.K_r:
                         self.state = GameState()  # Restart the game
@@ -465,7 +470,9 @@ class PuyoGame:
                     elif event.key == pygame.K_q:
                         self.state.running = False
                         self.game_over = True
-
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    self.is_down_pressed = False  # Stop fast drop
 
     def is_running(self):
         return not self.game_over
