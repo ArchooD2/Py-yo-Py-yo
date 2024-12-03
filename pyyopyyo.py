@@ -50,7 +50,7 @@ PUYO_TEXT = {
     90: "⭐",            # Star Puyo
     180: "🌙",           # Moon Puyo
     360: "☄️",          # Comet Puyo
-    720: "🪐",           # Saturn Puyo
+    720: "💠",           # Saturn Puyo
     1000: "🃏",           # Club Puyo
     5000: "💎",          # Diamond Puyo
     20000: "❤️",         # Heart Puyo
@@ -58,7 +58,7 @@ PUYO_TEXT = {
     500000: "👑",        # Crown Puyo
     2000000: "🍄",       # Mushroom Puyo
     10000000: "☀️",     # Sun Puyo
-    50000000: "🎩",      # Top Hat Puyo
+    50000000: "🍅",      # Top Hat Puyo
     200000000: "⚽",     # Ball Puyo
     1000000000: "🎪",    # Tent Puyo
     5000000000: "💿",    # GD-ROM Puyo
@@ -115,10 +115,11 @@ class Puyo:
         self.animation_timer = animation_timer  # Timer for animations
 
 class GameState:
-    def __init__(self, grid=None, current_puyo=None, next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True):
+    def __init__(self, grid=None, current_puyo=None, next_puyo=None, next_next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True):
         self.grid = grid if grid else [[EMPTY for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
         self.current_puyo = current_puyo if current_puyo else self.generate_puyo()
         self.next_puyo = next_puyo if next_puyo else self.generate_puyo()
+        self.next_next_puyo = next_next_puyo if next_next_puyo else self.generate_puyo()
         self.score = score
         self.fall_timer = fall_timer
         self.fall_speed = fall_speed
@@ -137,6 +138,7 @@ class GameState:
             grid=[[copy.deepcopy(cell) for cell in row] for row in self.grid],
             current_puyo=copy.deepcopy(self.current_puyo),
             next_puyo=copy.deepcopy(self.next_puyo),
+            next_next_puyo=copy.deepcopy(self.next_next_puyo),
             score=self.score,
             fall_timer=self.fall_timer,
             fall_speed=self.fall_speed,
@@ -218,7 +220,8 @@ class GameState:
         else:
             # No more matches, spawn new puyo
             self.current_puyo = self.next_puyo
-            self.next_puyo = self.generate_puyo()
+            self.next_puyo = self.next_next_puyo
+            self.next_next_puyo = self.generate_puyo()
             if not self.is_valid_move(self.current_puyo):
                 self.running = False  # Game over
 
@@ -340,15 +343,15 @@ class PuyoGame:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 24)
         self.nuisance_images = []  # To store the nuisance images to display
+        self.game_over = False  # Flag to indicate game over state
 
     def draw(self):
         self.screen.fill((0, 0, 0))
         # Draw the score and other stats
         score_text = self.font.render(f"Score: {self.state.score}", True, (255, 255, 255))
         self.screen.blit(score_text, (10, 10))
-
-        time_elapsed = int(time() - self.state.start_time)
-        time_text = self.font.render(f"Time: {time_elapsed}s", True, (255, 255, 255))
+        time_elapsed = "gameover" if not self.state.running else int(time() - self.state.start_time)
+        time_text = self.font.render(f"Time: {time_elapsed}{'s' if time_elapsed != 'gameover' else ''}", True, (255, 255, 255))
         self.screen.blit(time_text, (10, 40))
 
         chain_text = self.font.render(f"Current Chain: {self.state.chain_count}", True, (255, 255, 255))
@@ -363,10 +366,17 @@ class PuyoGame:
             pygame.draw.rect(self.screen, COLOR_MAP[color], (next_x, next_y, TILE_SIZE, TILE_SIZE))
             pygame.draw.rect(self.screen, (255, 255, 255), (next_x, next_y, TILE_SIZE, TILE_SIZE), 1)
 
+        # Draw the second next Puyo pair
+        for x, y, color in self.state.next_next_puyo:
+            next_next_x = SCREEN_WIDTH - 180 + x * TILE_SIZE
+            next_next_y = 150 + y * TILE_SIZE
+            pygame.draw.rect(self.screen, COLOR_MAP[color], (next_next_x, next_next_y, TILE_SIZE, TILE_SIZE))
+            pygame.draw.rect(self.screen, (255, 255, 255), (next_next_x, next_next_y, TILE_SIZE, TILE_SIZE), 1)
+
         # Draw the nuisance images below the next puyo
         self.update_nuisance_images(last_nuisance)
         x_offset = SCREEN_WIDTH - 180
-        y_offset = 120
+        y_offset = 200
         for image in self.nuisance_images:
             self.screen.blit(image, (x_offset, y_offset))
             y_offset += image.get_height() + 5
@@ -411,6 +421,10 @@ class PuyoGame:
                 pygame.draw.rect(self.screen, (255, 255, 255),
                                  (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
 
+        if not self.state.running:
+            game_over_text = self.font.render("Game Over! Press R to Restart or Q to Quit", True, (255, 0, 0))
+            self.screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 2))
+
         pygame.display.flip()
 
     def update(self):
@@ -427,9 +441,34 @@ class PuyoGame:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.state.running = False
+                self.game_over = True
+            elif event.type == pygame.KEYDOWN:
+                if self.state.running:  # Game is active
+                    if event.key == pygame.K_LEFT:
+                        self.process_input('left')
+                    elif event.key == pygame.K_RIGHT:
+                        self.process_input('right')
+                    elif event.key == pygame.K_DOWN:
+                        self.process_input('drop')
+                    elif event.key == pygame.K_UP:
+                        self.process_input('rotate_cw')
+                    elif event.key == pygame.K_z:  # Clockwise rotation (Z)
+                        self.process_input('rotate_cw')
+                    elif event.key == pygame.K_x:  # Counter-clockwise rotation (X)
+                        self.process_input('rotate_ccw')
+                    elif event.key == pygame.K_SPACE:
+                        self.state.hard_drop()
+                else:  # Game over or paused state
+                    if event.key == pygame.K_r:
+                        self.state = GameState()  # Restart the game
+                        self.game_over = False
+                    elif event.key == pygame.K_q:
+                        self.state.running = False
+                        self.game_over = True
+
 
     def is_running(self):
-        return self.state.is_running()
+        return not self.game_over
 
     def process_input(self, action):
         self.state.process_input(action)
@@ -438,34 +477,17 @@ class PuyoGame:
         """Update the nuisance images display."""
         self.nuisance_images = nuisance_images[:4]
 
-
 def main():
     game = PuyoGame()
 
     while game.is_running():
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    game.process_input('left')
-                elif event.key == pygame.K_RIGHT:
-                    game.process_input('right')
-                elif event.key == pygame.K_DOWN:
-                    game.process_input('drop')
-                elif event.key == pygame.K_UP:
-                    game.process_input('rotate_cw')
-                elif event.key == pygame.K_z:  # Clockwise rotation (Z)
-                    game.process_input('rotate_cw')
-                elif event.key == pygame.K_x:  # Counter-clockwise rotation (X)
-                    game.process_input('rotate_ccw')
-                elif event.key == pygame.K_SPACE:
-                    game.state.hard_drop()
-            elif event.type == pygame.QUIT:
-                game.state.running = False
-        game.handle_events()
-        game.update()
+        game.handle_events()  # Consolidate event handling here
+        if game.state.running:
+            game.update()
         game.draw()
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
