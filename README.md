@@ -32,13 +32,16 @@ Ensure you have the following installed:
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/ArchooD2/Py-yo-py-yo.git```
+   git clone https://github.com/ArchooD2/Py-yo-py-yo.git
+   ```
 2. Navigate to the project directory:
    ```bash
-   cd Py-yo-py-yo```
+   cd Py-yo-py-yo
+   ```
 3. Install the required dependencies
    ```bash
-   pip install -r requirements.txt```
+   pip install -r requirements.txt
+   ```
 
 ---
 
