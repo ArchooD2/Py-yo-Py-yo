@@ -456,8 +456,8 @@ class PuyoGame:
                         self.process_input('rotate_cw')
                     elif event.key == pygame.K_x:  # Counter-clockwise rotation (X)
                         self.process_input('rotate_ccw')
-                    elif event.key == pygame.K_SPACE:
-                        self.state.hard_drop()
+                    #elif event.key == pygame.K_SPACE:
+                    #    self.state.hard_drop()
                 else:  # Game over or paused state
                     if event.key == pygame.K_r:
                         self.state = GameState()  # Restart the game
