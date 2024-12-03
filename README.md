@@ -44,7 +44,7 @@ Ensure you have the following installed:
 
 ### Current only usages:
 
-- PuyoPuyo.py
+- Pyyopyyo.py
     the main game, in pygame, named "PuyoPuyo" for simplicity.
 
 ## Contributing
