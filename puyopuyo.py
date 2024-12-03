@@ -2,7 +2,7 @@ import pygame
 import random
 from collections import deque
 import copy
-from time import sleep as wait
+from time import sleep as wait, time
 
 # Initialize pygame
 pygame.init()
@@ -11,8 +11,8 @@ crazy = False  # Set to True to enable crazy mode
 # Constants
 GRID_WIDTH, GRID_HEIGHT = 6, 12
 TILE_SIZE = 40
-SCREEN_WIDTH = GRID_WIDTH * TILE_SIZE
-SCREEN_HEIGHT = (GRID_HEIGHT + 2) * TILE_SIZE
+SCREEN_WIDTH = GRID_WIDTH * TILE_SIZE + 300  # Increased width for next box and stats
+SCREEN_HEIGHT = (GRID_HEIGHT + 6) * TILE_SIZE  # Increased height to lower the grid
 FPS = 60
 COLORS = ["red", "green", "blue", "yellow"]
 EMPTY = None
@@ -126,6 +126,7 @@ class GameState:
         self.clearing = False  # Flag to indicate if clearing animation is happening
         self.chain_count = 0
         self.delta_time = 0
+        self.start_time = time()  # Track the time the game starts
 
     def generate_puyo(self):
         return [[GRID_WIDTH // 2, 0, random.choice(COLORS)],
@@ -178,6 +179,7 @@ class GameState:
                 for puyo in self.current_puyo:
                     puyo[1] += 1
             self.lock_puyo()
+            self.fall_timer = 0
             self.current_puyo = None
             self.chain_count = 0
             self.resolve()
@@ -341,19 +343,39 @@ class PuyoGame:
 
     def draw(self):
         self.screen.fill((0, 0, 0))
-        # Draw the score
+        # Draw the score and other stats
         score_text = self.font.render(f"Score: {self.state.score}", True, (255, 255, 255))
         self.screen.blit(score_text, (10, 10))
-        self.update_nuisance_images(last_nuisance)  # Update the nuisance images display
-        # Draw the nuisance images above the playable area
-        x_offset = 10
+
+        time_elapsed = int(time() - self.state.start_time)
+        time_text = self.font.render(f"Time: {time_elapsed}s", True, (255, 255, 255))
+        self.screen.blit(time_text, (10, 40))
+
+        chain_text = self.font.render(f"Current Chain: {self.state.chain_count}", True, (255, 255, 255))
+        self.screen.blit(chain_text, (10, 70))
+
+        # Draw the next Puyo pair
+        next_text = self.font.render("Next:", True, (255, 255, 255))
+        self.screen.blit(next_text, (SCREEN_WIDTH - 200, 10))
+        for x, y, color in self.state.next_puyo:
+            next_x = SCREEN_WIDTH - 180 + x * TILE_SIZE
+            next_y = 40 + y * TILE_SIZE
+            pygame.draw.rect(self.screen, COLOR_MAP[color], (next_x, next_y, TILE_SIZE, TILE_SIZE))
+            pygame.draw.rect(self.screen, (255, 255, 255), (next_x, next_y, TILE_SIZE, TILE_SIZE), 1)
+
+        # Draw the nuisance images below the next puyo
+        self.update_nuisance_images(last_nuisance)
+        x_offset = SCREEN_WIDTH - 180
+        y_offset = 120
         for image in self.nuisance_images:
-            self.screen.blit(image, (x_offset, 40))
-            x_offset += image.get_width() + 5
+            self.screen.blit(image, (x_offset, y_offset))
+            y_offset += image.get_height() + 5
 
         # Draw the grid
         for y in range(GRID_HEIGHT):
             for x in range(GRID_WIDTH):
+                pygame.draw.rect(self.screen, (128, 128, 128),
+                                 (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)  # Draw grid
                 puyo = self.state.grid[y][x]
                 if puyo:
                     # Handle popping animation
@@ -372,22 +394,23 @@ class PuyoGame:
                         )
                         pygame.draw.rect(puyo_surface, color_with_alpha, rect)
                         puyo_rect = puyo_surface.get_rect(
-                            topleft=(x * TILE_SIZE, (y + 2) * TILE_SIZE)
+                            topleft=(x * TILE_SIZE, (y + 4) * TILE_SIZE)
                         )
                         self.screen.blit(puyo_surface, puyo_rect)
                     else:
                         pygame.draw.rect(self.screen, COLOR_MAP[puyo.color],
-                                         (x * TILE_SIZE, (y + 2) * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                                         (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE))
                         pygame.draw.rect(self.screen, (255, 255, 255),
-                                         (x * TILE_SIZE, (y + 2) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
+                                         (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
 
         # Draw the current Puyo pair if not in clearing state
         if self.state.current_puyo:
             for x, y, color in self.state.current_puyo:
                 pygame.draw.rect(self.screen, COLOR_MAP[color],
-                                 (x * TILE_SIZE, (y + 2) * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                                 (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE))
                 pygame.draw.rect(self.screen, (255, 255, 255),
-                                 (x * TILE_SIZE, (y + 2) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
+                                 (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
+
         pygame.display.flip()
 
     def update(self):
@@ -413,7 +436,7 @@ class PuyoGame:
 
     def update_nuisance_images(self, nuisance_images):
         """Update the nuisance images display."""
-        self.nuisance_images = nuisance_images
+        self.nuisance_images = nuisance_images[:4]
 
 
 def main():
