@@ -9,8 +9,10 @@ pygame.init()
 crazy = False  # Set to True to enable crazy mode
 
 # Constants
-GRID_WIDTH, GRID_HEIGHT = 6, 12
-TILE_SIZE = 40
+DEFAULT_GRID_WIDTH = 6
+DEFAULT_GRID_HEIGHT = 12
+GRID_WIDTH, GRID_HEIGHT = DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT #grid sizes set to default but can be changed :3
+TILE_SIZE = 30
 SCREEN_WIDTH = GRID_WIDTH * TILE_SIZE + 300  # Increased width for next box and stats
 SCREEN_HEIGHT = (GRID_HEIGHT + 6) * TILE_SIZE  # Increased height to lower the grid
 FPS = 60
@@ -70,6 +72,8 @@ PUYO_TEXT = {
 }
 # Load nuisance images
 nuisance_images = {value: pygame.image.load(f"nuisance_images/{filename}") for value, filename in PUYO_EMOJIS.items()}
+def ceildiv(a, b):
+    return -(a // -b)
 
 def get_puyo_image(nuisance_count):
     """Get the appropriate image for a given nuisance count."""
@@ -115,8 +119,8 @@ class Puyo:
         self.animation_timer = animation_timer  # Timer for animations
 
 class GameState:
-    def __init__(self, grid=None, current_puyo=None, next_puyo=None, next_next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True):
-        self.grid = grid if grid else [[EMPTY for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+    def __init__(self, grid=None, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, current_puyo=None, next_puyo=None, next_next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True):
+        self.grid = grid if grid else [[EMPTY for _ in range(grid_width)] for _ in range(grid_height)]
         self.current_puyo = current_puyo if current_puyo else self.generate_puyo()
         self.next_puyo = next_puyo if next_puyo else self.generate_puyo()
         self.next_next_puyo = next_next_puyo if next_next_puyo else self.generate_puyo()
@@ -130,8 +134,8 @@ class GameState:
         self.start_time = time()  # Track the time the game starts
 
     def generate_puyo(self):
-        return [[GRID_WIDTH // 2, 0, random.choice(COLORS)],
-                [GRID_WIDTH // 2, 1, random.choice(COLORS)]]
+        return [[(GRID_WIDTH - 1) // 2, 0, random.choice(COLORS)],
+                [(GRID_WIDTH - 1) // 2, 1, random.choice(COLORS)]]
 
     def clone(self):
         return GameState(
