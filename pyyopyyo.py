@@ -46,7 +46,7 @@ PUYO_EMOJIS = {
     1000000000000: "Nuisance_redswirl_puyo4.png",
 }
 PUYO_TEXT = {
-    1: "⊚",              # Small Garbage Puyo
+    1: "◯",              # Small Garbage Puyo
     6: "⚪",       # Large Garbage Puyo (6 small ones)
     30: "♪",            # Red nuisance puyo (rock)
     90: "⭐",            # Star Puyo
@@ -119,7 +119,10 @@ class Puyo:
         self.animation_timer = animation_timer  # Timer for animations
 
 class GameState:
-    def __init__(self, grid=None, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, current_puyo=None, next_puyo=None, next_next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True):
+    def __init__(self, grid=None, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, current_puyo=None, next_puyo=None, next_next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True, required_group_number=4):
+        self.required_group_number = required_group_number
+        self.grid_width = grid_width
+        self.grid_height = grid_height
         self.grid = grid if grid else [[EMPTY for _ in range(grid_width)] for _ in range(grid_height)]
         self.current_puyo = current_puyo if current_puyo else self.generate_puyo()
         self.next_puyo = next_puyo if next_puyo else self.generate_puyo()
@@ -134,8 +137,8 @@ class GameState:
         self.start_time = time()  # Track the time the game starts
 
     def generate_puyo(self):
-        return [[(GRID_WIDTH - 1) // 2, 0, random.choice(COLORS)],
-                [(GRID_WIDTH - 1) // 2, 1, random.choice(COLORS)]]
+        return [[(self.grid_width - 1) // 2, 0, random.choice(COLORS)],
+                [(self.grid_width - 1) // 2, 1, random.choice(COLORS)]]
 
     def clone(self):
         return GameState(
@@ -239,7 +242,7 @@ class GameState:
                 puyo = self.grid[y][x]
                 if puyo and not visited[y][x] and puyo.state == 'normal':
                     connected = self.get_connected_puyos(x, y, visited)
-                    if len(connected) >= 4:
+                    if len(connected) >= self.required_group_number:
                         self.to_clear.extend(connected)
                         self.colors_cleared.add(puyo.color)
                         self.groups_cleared.append(len(connected))
@@ -338,9 +341,12 @@ class GameState:
     
 
 class PuyoGame:
-    def __init__(self):
+    def __init__(self, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, required_group_number=4):
         global lastgrid
-        self.state = GameState()
+        self.grid_width = grid_width
+        self.grid_height = grid_height
+        self.required_group_number = required_group_number
+        self.state = GameState(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number)
         self.is_down_pressed = False  # Track if the down arrow is pressed
         # Initialize pygame elements
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -387,8 +393,8 @@ class PuyoGame:
             y_offset += image.get_height() + 5
 
         # Draw the grid
-        for y in range(GRID_HEIGHT):
-            for x in range(GRID_WIDTH):
+        for y in range(self.grid_height):
+            for x in range(self.grid_width):
                 pygame.draw.rect(self.screen, (128, 128, 128),
                                  (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)  # Draw grid
                 puyo = self.state.grid[y][x]
@@ -489,7 +495,13 @@ class PuyoGame:
         self.nuisance_images = nuisance_images[:4]
 
 def main():
-    game = PuyoGame()
+    if input("Customize game settings? (y/n): ").lower() == 'y':
+        grid_width = int(input("Enter the grid width (default 6): ") or DEFAULT_GRID_WIDTH)
+        grid_height = int(input("Enter the grid height (default 12): ") or DEFAULT_GRID_HEIGHT)
+        required_group_number = int(input("Enter the required group number to clear (default 4): ") or 4)
+        game = PuyoGame(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number)
+    else:
+        game = PuyoGame()
 
     while game.is_running():
         game.handle_events()  # Consolidate event handling here
