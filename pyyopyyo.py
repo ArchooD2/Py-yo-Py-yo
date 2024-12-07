@@ -236,9 +236,10 @@ class GameState:
         self.to_clear = []
         self.colors_cleared = set()
         self.groups_cleared = []
-        visited = [[False for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
-        for y in range(GRID_HEIGHT):
-            for x in range(GRID_WIDTH):
+        visited = [[False for _ in range(self.grid_width)] for _ in range(self.grid_height)]
+
+        for y in range(self.grid_height):  # Use self.grid_height
+            for x in range(self.grid_width):  # Use self.grid_width
                 puyo = self.grid[y][x]
                 if puyo and not visited[y][x] and puyo.state == 'normal':
                     connected = self.get_connected_puyos(x, y, visited)
@@ -246,6 +247,7 @@ class GameState:
                         self.to_clear.extend(connected)
                         self.colors_cleared.add(puyo.color)
                         self.groups_cleared.append(len(connected))
+
 
     def get_connected_puyos(self, x, y, visited):
         color = self.grid[y][x].color
@@ -260,11 +262,12 @@ class GameState:
             connected.append((cx, cy))
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 nx, ny = cx + dx, cy + dy
-                if (0 <= nx < GRID_WIDTH and 0 <= ny < GRID_HEIGHT):
+                if 0 <= nx < self.grid_width and 0 <= ny < self.grid_height:  # Use self.grid_width and self.grid_height
                     neighbor = self.grid[ny][nx]
                     if neighbor and not visited[ny][nx] and neighbor.color == color and neighbor.state == 'normal':
                         queue.append((nx, ny))
         return connected
+
 
     def update_clearing(self, delta_time):
         animation_complete = True
@@ -285,13 +288,17 @@ class GameState:
 
     def apply_gravity(self):
         moved = False
-        for x in range(GRID_WIDTH):
-            for y in range(GRID_HEIGHT - 2, -1, -1):
-                if self.grid[y][x] and self.grid[y + 1][x] == EMPTY:
-                    self.grid[y + 1][x] = self.grid[y][x]
-                    self.grid[y][x] = EMPTY
-                    moved = True
+        for y in range(self.grid_height - 2, -1, -1):  # Start from second to last row
+            for x in range(self.grid_width):
+                if self.grid[y][x]:  # Check if there's a puyo at (x, y)
+                    # Ensure we are not accessing out-of-bounds by checking y + 1
+                    if y + 1 < self.grid_height and self.grid[y + 1][x] == EMPTY:
+                        # Move the puyo down
+                        self.grid[y + 1][x] = self.grid[y][x]
+                        self.grid[y][x] = EMPTY
+                        moved = True
         return moved
+
 
     def update_score(self, cleared_puyos, chain_count):
         chain_bonus = CHAIN_BONUS[min(chain_count - 1, len(CHAIN_BONUS) - 1)]
@@ -330,11 +337,10 @@ class GameState:
         return True
 
     def is_valid_position(self, x, y):
-        if not (0 <= x < GRID_WIDTH and 0 <= y < GRID_HEIGHT):
+        # Check if x and y are within grid boundaries
+        if x < 0 or x >= self.grid_width or y < 0 or y >= self.grid_height:
             return False
-        if self.grid[y][x]:
-            return False
-        return True
+        return not self.grid[y][x]
 
     def is_running(self):
         return self.running
