@@ -12,10 +12,14 @@ crazy = False  # Set to True to enable crazy mode
 DEFAULT_GRID_WIDTH = 6
 DEFAULT_GRID_HEIGHT = 12
 GRID_WIDTH, GRID_HEIGHT = DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT #grid sizes set to default but can be changed :3
-TILE_SIZE = 30
-SCREEN_WIDTH = GRID_WIDTH * TILE_SIZE + 300  # Increased width for next box and stats
-SCREEN_HEIGHT = (GRID_HEIGHT + 6) * TILE_SIZE  # Increased height to lower the grid
+BASE_TILE_SIZE = 40
+SCREEN_WIDTH = GRID_WIDTH * BASE_TILE_SIZE + 300  # Increased width for next box and stats
+TILE_SIZE = BASE_TILE_SIZE
+SCREEN_HEIGHT = (GRID_HEIGHT + 6) * BASE_TILE_SIZE  # Increased height to lower the grid
 FPS = 60
+MAX_SCREEN_WIDTH = 1920
+MAX_SCREEN_HEIGHT = 1080
+MIN_TILE_SIZE = 15  # Prevent tiles from becoming too small
 COLORS = ["red", "green", "blue", "yellow"]
 EMPTY = None
 
@@ -347,14 +351,17 @@ class GameState:
     
 
 class PuyoGame:
-    def __init__(self, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, required_group_number=4):
-        global lastgrid
+    def __init__(self, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, required_group_number=4, TILE_SIZE=BASE_TILE_SIZE):
+        global lastgrid, SCREEN_HEIGHT, SCREEN_WIDTH
+        TILE_SIZE = TILE_SIZE
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.required_group_number = required_group_number
         self.state = GameState(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number)
         self.is_down_pressed = False  # Track if the down arrow is pressed
         # Initialize pygame elements
+        SCREEN_WIDTH = SCREEN_WIDTH
+        SCREEN_HEIGHT = SCREEN_HEIGHT
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Puyo Puyo")
         self.clock = pygame.time.Clock()
@@ -499,13 +506,22 @@ class PuyoGame:
     def update_nuisance_images(self, nuisance_images):
         """Update the nuisance images display."""
         self.nuisance_images = nuisance_images[:4]
+def calculate_tile_size(grid_width, grid_height):
+    max_tile_width = MAX_SCREEN_WIDTH // (grid_width + 5)  # Extra space for stats
+    max_tile_height = MAX_SCREEN_HEIGHT // (grid_height + 6)  # Extra space for UI
+    tile_size = min(max_tile_width, max_tile_height, TILE_SIZE)
+    return max(tile_size, MIN_TILE_SIZE)  # Ensure the tile size is not too small
 
 def main():
+    global TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
     if input("Customize game settings? (y/n): ").lower() == 'y':
         grid_width = int(input("Enter the grid width (default 6): ") or DEFAULT_GRID_WIDTH)
         grid_height = int(input("Enter the grid height (default 12): ") or DEFAULT_GRID_HEIGHT)
         required_group_number = int(input("Enter the required group number to clear (default 4): ") or 4)
-        game = PuyoGame(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number)
+        TILE_SIZE = calculate_tile_size(grid_width, grid_height)
+        SCREEN_WIDTH = TILE_SIZE * (grid_width + 5)  # Grid + space for stats
+        SCREEN_HEIGHT = TILE_SIZE * (grid_height + 6)  # Grid + extra space for UI
+        game = PuyoGame(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number,TILE_SIZE=TILE_SIZE)
     else:
         game = PuyoGame()
 
