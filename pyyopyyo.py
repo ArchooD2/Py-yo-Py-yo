@@ -2,7 +2,7 @@ import pygame
 import random
 from collections import deque
 import copy
-from time import sleep as wait, time
+from time import time
 
 # Initialize pygame
 pygame.init()
@@ -11,9 +11,14 @@ crazy = False  # Set to True to enable crazy mode
 # Constants
 DEFAULT_GRID_WIDTH = 6
 DEFAULT_GRID_HEIGHT = 12
-GRID_WIDTH, GRID_HEIGHT = DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT #grid sizes set to default but can be changed :3
+GRID_WIDTH, GRID_HEIGHT = (
+    DEFAULT_GRID_WIDTH,
+    DEFAULT_GRID_HEIGHT,
+)  # grid sizes set to default but can be changed :3
 BASE_TILE_SIZE = 40
-SCREEN_WIDTH = GRID_WIDTH * BASE_TILE_SIZE + 300  # Increased width for next box and stats
+SCREEN_WIDTH = (
+    GRID_WIDTH * BASE_TILE_SIZE + 300
+)  # Increased width for next box and stats
 TILE_SIZE = BASE_TILE_SIZE
 SCREEN_HEIGHT = (GRID_HEIGHT + 6) * BASE_TILE_SIZE  # Increased height to lower the grid
 FPS = 60
@@ -50,34 +55,40 @@ PUYO_EMOJIS = {
     1000000000000: "Nuisance_redswirl_puyo4.png",
 }
 PUYO_TEXT = {
-    1: "◯",              # Small Garbage Puyo
-    6: "⚪",       # Large Garbage Puyo (6 small ones)
-    30: "♪",            # Red nuisance puyo (rock)
-    90: "⭐",            # Star Puyo
-    180: "🌙",           # Moon Puyo
-    360: "☄️",          # Comet Puyo
-    720: "💠",           # Saturn Puyo
-    1000: "🃏",           # Club Puyo
-    5000: "💎",          # Diamond Puyo
-    20000: "❤️",         # Heart Puyo
-    100000: "♠️",        # Spade Puyo
-    500000: "👑",        # Crown Puyo
-    2000000: "🍄",       # Mushroom Puyo
-    10000000: "☀️",     # Sun Puyo
-    50000000: "🍅",      # Top Hat Puyo
-    200000000: "⚽",     # Ball Puyo
-    1000000000: "🎪",    # Tent Puyo
-    5000000000: "💿",    # GD-ROM Puyo
-    10000000000: "🔵",   # Blue Swirl Puyo
-    50000000000: "🟢",   # Green Swirl Puyo
+    1: "◯",  # Small Garbage Puyo
+    6: "⚪",  # Large Garbage Puyo (6 small ones)
+    30: "♪",  # Red nuisance puyo (rock)
+    90: "⭐",  # Star Puyo
+    180: "🌙",  # Moon Puyo
+    360: "☄️",  # Comet Puyo
+    720: "💠",  # Saturn Puyo
+    1000: "🃏",  # Club Puyo
+    5000: "💎",  # Diamond Puyo
+    20000: "❤️",  # Heart Puyo
+    100000: "♠️",  # Spade Puyo
+    500000: "👑",  # Crown Puyo
+    2000000: "🍄",  # Mushroom Puyo
+    10000000: "☀️",  # Sun Puyo
+    50000000: "🍅",  # Top Hat Puyo
+    200000000: "⚽",  # Ball Puyo
+    1000000000: "🎪",  # Tent Puyo
+    5000000000: "💿",  # GD-ROM Puyo
+    10000000000: "🔵",  # Blue Swirl Puyo
+    50000000000: "🟢",  # Green Swirl Puyo
     100000000000: "🟡",  # Yellow Swirl Puyo
     500000000000: "🟣",  # Purple Swirl Puyo
-    1000000000000: "🔴", # Red Swirl Puyo
+    1000000000000: "🔴",  # Red Swirl Puyo
 }
 # Load nuisance images
-nuisance_images = {value: pygame.image.load(f"nuisance_images/{filename}") for value, filename in PUYO_EMOJIS.items()}
+nuisance_images = {
+    value: pygame.image.load(f"nuisance_images/{filename}")
+    for value, filename in PUYO_EMOJIS.items()
+}
+
+
 def ceildiv(a, b):
     return -(a // -b)
+
 
 def get_puyo_image(nuisance_count):
     """Get the appropriate image for a given nuisance count."""
@@ -88,6 +99,7 @@ def get_puyo_image(nuisance_count):
             nuisance_count -= value
     return images
 
+
 def get_puyo_text(nuisance_count):
     """Get the appropriate text representation for a given nuisance count."""
     text = ""
@@ -96,6 +108,7 @@ def get_puyo_text(nuisance_count):
             text += PUYO_TEXT[value]
             nuisance_count -= value
     return text
+
 
 # Animation Constants
 POP_TIME = 0.7  # Duration of the pop animation in seconds
@@ -112,22 +125,41 @@ COLOR_MAP = {
     "green": (0, 255, 0),
     "blue": (0, 0, 255),
     "yellow": (255, 255, 0),
-    EMPTY: (0, 0, 0)
+    EMPTY: (0, 0, 0),
 }
 
+
 class Puyo:
-    def __init__(self, color, state='normal', animation_timer=0):
+    def __init__(self, color, state="normal", animation_timer=0):
         global crazy
         self.color = color
         self.state = state  # 'normal', 'popping'
         self.animation_timer = animation_timer  # Timer for animations
 
+
 class GameState:
-    def __init__(self, grid=None, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, current_puyo=None, next_puyo=None, next_next_puyo=None, score=0, fall_timer=0, fall_speed=30, running=True, required_group_number=4):
+    def __init__(
+        self,
+        grid=None,
+        grid_width=GRID_WIDTH,
+        grid_height=GRID_HEIGHT,
+        current_puyo=None,
+        next_puyo=None,
+        next_next_puyo=None,
+        score=0,
+        fall_timer=0,
+        fall_speed=30,
+        running=True,
+        required_group_number=4,
+    ):
         self.required_group_number = required_group_number
         self.grid_width = grid_width
         self.grid_height = grid_height
-        self.grid = grid if grid else [[EMPTY for _ in range(grid_width)] for _ in range(grid_height)]
+        self.grid = (
+            grid
+            if grid
+            else [[EMPTY for _ in range(grid_width)] for _ in range(grid_height)]
+        )
         self.current_puyo = current_puyo if current_puyo else self.generate_puyo()
         self.next_puyo = next_puyo if next_puyo else self.generate_puyo()
         self.next_next_puyo = next_next_puyo if next_next_puyo else self.generate_puyo()
@@ -141,8 +173,10 @@ class GameState:
         self.start_time = time()  # Track the time the game starts
 
     def generate_puyo(self):
-        return [[(self.grid_width - 1) // 2, 0, random.choice(COLORS)],
-                [(self.grid_width - 1) // 2, 1, random.choice(COLORS)]]
+        return [
+            [(self.grid_width - 1) // 2, 0, random.choice(COLORS)],
+            [(self.grid_width - 1) // 2, 1, random.choice(COLORS)],
+        ]
 
     def clone(self):
         return GameState(
@@ -153,26 +187,26 @@ class GameState:
             score=self.score,
             fall_timer=self.fall_timer,
             fall_speed=self.fall_speed,
-            running=self.running
+            running=self.running,
         )
 
     def process_input(self, action):
         if self.current_puyo and not self.clearing:  # Prevent input during clearing
-            if action == 'left':
+            if action == "left":
                 if self.is_valid_move(self.current_puyo, dx=-1):
                     for puyo in self.current_puyo:
                         puyo[0] -= 1
-            elif action == 'right':
+            elif action == "right":
                 if self.is_valid_move(self.current_puyo, dx=1):
                     for puyo in self.current_puyo:
                         puyo[0] += 1
-            elif action == 'rotate_cw':  # Clockwise rotation
+            elif action == "rotate_cw":  # Clockwise rotation
                 self.rotate_puyo(clockwise=True)
-            elif action == 'rotate_ccw':  # Counter-clockwise rotation
+            elif action == "rotate_ccw":  # Counter-clockwise rotation
                 self.rotate_puyo(clockwise=False)
-            elif action == 'drop':
+            elif action == "drop":
                 self.drop_puyo()
-            elif action == 'hard_drop':
+            elif action == "hard_drop":
                 self.hard_drop()
 
     def drop_puyo(self):
@@ -226,7 +260,7 @@ class GameState:
             self.chain_count += 1
             for x, y in self.to_clear:
                 puyo = self.grid[y][x]
-                puyo.state = 'popping'
+                puyo.state = "popping"
                 puyo.animation_timer = 0
         else:
             # No more matches, spawn new puyo
@@ -240,18 +274,19 @@ class GameState:
         self.to_clear = []
         self.colors_cleared = set()
         self.groups_cleared = []
-        visited = [[False for _ in range(self.grid_width)] for _ in range(self.grid_height)]
+        visited = [
+            [False for _ in range(self.grid_width)] for _ in range(self.grid_height)
+        ]
 
         for y in range(self.grid_height):  # Use self.grid_height
             for x in range(self.grid_width):  # Use self.grid_width
                 puyo = self.grid[y][x]
-                if puyo and not visited[y][x] and puyo.state == 'normal':
+                if puyo and not visited[y][x] and puyo.state == "normal":
                     connected = self.get_connected_puyos(x, y, visited)
                     if len(connected) >= self.required_group_number:
                         self.to_clear.extend(connected)
                         self.colors_cleared.add(puyo.color)
                         self.groups_cleared.append(len(connected))
-
 
     def get_connected_puyos(self, x, y, visited):
         color = self.grid[y][x].color
@@ -266,12 +301,18 @@ class GameState:
             connected.append((cx, cy))
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 nx, ny = cx + dx, cy + dy
-                if 0 <= nx < self.grid_width and 0 <= ny < self.grid_height:  # Use self.grid_width and self.grid_height
+                if (
+                    0 <= nx < self.grid_width and 0 <= ny < self.grid_height
+                ):  # Use self.grid_width and self.grid_height
                     neighbor = self.grid[ny][nx]
-                    if neighbor and not visited[ny][nx] and neighbor.color == color and neighbor.state == 'normal':
+                    if (
+                        neighbor
+                        and not visited[ny][nx]
+                        and neighbor.color == color
+                        and neighbor.state == "normal"
+                    ):
                         queue.append((nx, ny))
         return connected
-
 
     def update_clearing(self, delta_time):
         animation_complete = True
@@ -303,13 +344,21 @@ class GameState:
                         moved = True
         return moved
 
-
     def update_score(self, cleared_puyos, chain_count):
         chain_bonus = CHAIN_BONUS[min(chain_count - 1, len(CHAIN_BONUS) - 1)]
         if crazy:
-            chain_bonus = 4*(2**chain_count)
-        color_bonus = COLOR_BONUS[min(len(self.colors_cleared) - 1, len(COLOR_BONUS) - 1)] if len(self.colors_cleared) > 0 else 0
-        group_bonus = sum([GROUP_BONUS[min(size - 4, len(GROUP_BONUS) - 1)] for size in self.groups_cleared])
+            chain_bonus = 4 * (2**chain_count)
+        color_bonus = (
+            COLOR_BONUS[min(len(self.colors_cleared) - 1, len(COLOR_BONUS) - 1)]
+            if len(self.colors_cleared) > 0
+            else 0
+        )
+        group_bonus = sum(
+            [
+                GROUP_BONUS[min(size - 4, len(GROUP_BONUS) - 1)]
+                for size in self.groups_cleared
+            ]
+        )
         total_bonus = chain_bonus + color_bonus + group_bonus
         if total_bonus == 0:
             total_bonus = 1
@@ -329,9 +378,13 @@ class GameState:
         last_nuisance = image_representation
         # Print statement reflecting chain score, cleared puyos, and nuisance details
         if text_representation:
-            print(f"Chain {chain_count}: {cleared_puyos} puyos cleared (+{score_increment}) -> Nuisance Puyo: {text_representation} ({NC}) (+{NL:.2f} leftover)")
+            print(
+                f"Chain {chain_count}: {cleared_puyos} puyos cleared (+{score_increment}) -> Nuisance Puyo: {text_representation} ({NC}) (+{NL:.2f} leftover)"
+            )
         else:
-            print(f"Chain {chain_count}: {cleared_puyos} puyos cleared (+{score_increment}) -> Nuisance Puyo: None (0) (+{NL:.2f} leftover)")
+            print(
+                f"Chain {chain_count}: {cleared_puyos} puyos cleared (+{score_increment}) -> Nuisance Puyo: None (0) (+{NL:.2f} leftover)"
+            )
 
     def is_valid_move(self, puyo_pair, dx=0, dy=0):
         for x, y, color in puyo_pair:
@@ -348,16 +401,26 @@ class GameState:
 
     def is_running(self):
         return self.running
-    
+
 
 class PuyoGame:
-    def __init__(self, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, required_group_number=4, TILE_SIZE=BASE_TILE_SIZE):
+    def __init__(
+        self,
+        grid_width=GRID_WIDTH,
+        grid_height=GRID_HEIGHT,
+        required_group_number=4,
+        TILE_SIZE=BASE_TILE_SIZE,
+    ):
         global lastgrid, SCREEN_HEIGHT, SCREEN_WIDTH
         TILE_SIZE = TILE_SIZE
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.required_group_number = required_group_number
-        self.state = GameState(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number)
+        self.state = GameState(
+            grid_width=grid_width,
+            grid_height=grid_height,
+            required_group_number=required_group_number,
+        )
         self.is_down_pressed = False  # Track if the down arrow is pressed
         # Initialize pygame elements
         SCREEN_WIDTH = SCREEN_WIDTH
@@ -372,13 +435,25 @@ class PuyoGame:
     def draw(self):
         self.screen.fill((0, 0, 0))
         # Draw the score and other stats
-        score_text = self.font.render(f"Score: {self.state.score}", True, (255, 255, 255))
+        score_text = self.font.render(
+            f"Score: {self.state.score}", True, (255, 255, 255)
+        )
         self.screen.blit(score_text, (10, 10))
-        time_elapsed = "gameover" if not self.state.running else int(time() - self.state.start_time)
-        time_text = self.font.render(f"Time: {time_elapsed}{'s' if time_elapsed != 'gameover' else ''}", True, (255, 255, 255))
+        time_elapsed = (
+            "gameover"
+            if not self.state.running
+            else int(time() - self.state.start_time)
+        )
+        time_text = self.font.render(
+            f"Time: {time_elapsed}{'s' if time_elapsed != 'gameover' else ''}",
+            True,
+            (255, 255, 255),
+        )
         self.screen.blit(time_text, (10, 40))
 
-        chain_text = self.font.render(f"Current Chain: {self.state.chain_count}", True, (255, 255, 255))
+        chain_text = self.font.render(
+            f"Current Chain: {self.state.chain_count}", True, (255, 255, 255)
+        )
         self.screen.blit(chain_text, (10, 70))
 
         # Draw the next Puyo pair
@@ -387,15 +462,28 @@ class PuyoGame:
         for x, y, color in self.state.next_puyo:
             next_x = SCREEN_WIDTH - 180 + x * TILE_SIZE
             next_y = 40 + y * TILE_SIZE
-            pygame.draw.rect(self.screen, COLOR_MAP[color], (next_x, next_y, TILE_SIZE, TILE_SIZE))
-            pygame.draw.rect(self.screen, (255, 255, 255), (next_x, next_y, TILE_SIZE, TILE_SIZE), 1)
+            pygame.draw.rect(
+                self.screen, COLOR_MAP[color], (next_x, next_y, TILE_SIZE, TILE_SIZE)
+            )
+            pygame.draw.rect(
+                self.screen, (255, 255, 255), (next_x, next_y, TILE_SIZE, TILE_SIZE), 1
+            )
 
         # Draw the second next Puyo pair
         for x, y, color in self.state.next_next_puyo:
             next_next_x = SCREEN_WIDTH - 180 + x * TILE_SIZE
             next_next_y = 150 + y * TILE_SIZE
-            pygame.draw.rect(self.screen, COLOR_MAP[color], (next_next_x, next_next_y, TILE_SIZE, TILE_SIZE))
-            pygame.draw.rect(self.screen, (255, 255, 255), (next_next_x, next_next_y, TILE_SIZE, TILE_SIZE), 1)
+            pygame.draw.rect(
+                self.screen,
+                COLOR_MAP[color],
+                (next_next_x, next_next_y, TILE_SIZE, TILE_SIZE),
+            )
+            pygame.draw.rect(
+                self.screen,
+                (255, 255, 255),
+                (next_next_x, next_next_y, TILE_SIZE, TILE_SIZE),
+                1,
+            )
 
         # Draw the nuisance images below the next puyo
         self.update_nuisance_images(last_nuisance)
@@ -408,23 +496,29 @@ class PuyoGame:
         # Draw the grid
         for y in range(self.grid_height):
             for x in range(self.grid_width):
-                pygame.draw.rect(self.screen, (128, 128, 128),
-                                 (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)  # Draw grid
+                pygame.draw.rect(
+                    self.screen,
+                    (128, 128, 128),
+                    (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                    1,
+                )  # Draw grid
                 puyo = self.state.grid[y][x]
                 if puyo:
                     # Handle popping animation
-                    if puyo.state == 'popping':
+                    if puyo.state == "popping":
                         progress = puyo.animation_timer / POP_TIME
                         scale = max(1.0 - progress, 0)
                         alpha = max(255 * (1.0 - progress), 0)
                         color = COLOR_MAP[puyo.color]
                         color_with_alpha = (color[0], color[1], color[2], int(alpha))
-                        puyo_surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                        puyo_surface = pygame.Surface(
+                            (TILE_SIZE, TILE_SIZE), pygame.SRCALPHA
+                        )
                         rect = pygame.Rect(
                             TILE_SIZE * (1 - scale) / 2,
                             TILE_SIZE * (1 - scale) / 2,
                             TILE_SIZE * scale,
-                            TILE_SIZE * scale
+                            TILE_SIZE * scale,
                         )
                         pygame.draw.rect(puyo_surface, color_with_alpha, rect)
                         puyo_rect = puyo_surface.get_rect(
@@ -432,22 +526,44 @@ class PuyoGame:
                         )
                         self.screen.blit(puyo_surface, puyo_rect)
                     else:
-                        pygame.draw.rect(self.screen, COLOR_MAP[puyo.color],
-                                         (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-                        pygame.draw.rect(self.screen, (255, 255, 255),
-                                         (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
+                        pygame.draw.rect(
+                            self.screen,
+                            COLOR_MAP[puyo.color],
+                            (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                        )
+                        pygame.draw.rect(
+                            self.screen,
+                            (255, 255, 255),
+                            (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                            1,
+                        )
 
         # Draw the current Puyo pair if not in clearing state
         if self.state.current_puyo:
             for x, y, color in self.state.current_puyo:
-                pygame.draw.rect(self.screen, COLOR_MAP[color],
-                                 (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-                pygame.draw.rect(self.screen, (255, 255, 255),
-                                 (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE), 1)
+                pygame.draw.rect(
+                    self.screen,
+                    COLOR_MAP[color],
+                    (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                )
+                pygame.draw.rect(
+                    self.screen,
+                    (255, 255, 255),
+                    (x * TILE_SIZE, (y + 4) * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                    1,
+                )
 
         if not self.state.running:
-            game_over_text = self.font.render("Game Over! Press R to Restart or Q to Quit", True, (255, 0, 0))
-            self.screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 2))
+            game_over_text = self.font.render(
+                "Game Over! Press R to Restart or Q to Quit", True, (255, 0, 0)
+            )
+            self.screen.blit(
+                game_over_text,
+                (
+                    SCREEN_WIDTH // 2 - game_over_text.get_width() // 2,
+                    SCREEN_HEIGHT // 2,
+                ),
+            )
 
         pygame.display.flip()
 
@@ -474,18 +590,18 @@ class PuyoGame:
             elif event.type == pygame.KEYDOWN:
                 if self.state.running:  # Game is active
                     if event.key == pygame.K_LEFT:
-                        self.process_input('left')
+                        self.process_input("left")
                     elif event.key == pygame.K_RIGHT:
-                        self.process_input('right')
+                        self.process_input("right")
                     elif event.key == pygame.K_DOWN:
                         self.is_down_pressed = True  # Start fast drop
-                        self.process_input('drop')
+                        self.process_input("drop")
                     elif event.key == pygame.K_UP:
-                        self.process_input('rotate_cw')
+                        self.process_input("rotate_cw")
                     elif event.key == pygame.K_z:  # Clockwise rotation (Z)
-                        self.process_input('rotate_cw')
+                        self.process_input("rotate_cw")
                     elif event.key == pygame.K_x:  # Counter-clockwise rotation (X)
-                        self.process_input('rotate_ccw')
+                        self.process_input("rotate_ccw")
                 else:  # Game over or paused state
                     if event.key == pygame.K_r:
                         self.state = GameState()  # Restart the game
@@ -506,22 +622,36 @@ class PuyoGame:
     def update_nuisance_images(self, nuisance_images):
         """Update the nuisance images display."""
         self.nuisance_images = nuisance_images[:4]
+
+
 def calculate_tile_size(grid_width, grid_height):
     max_tile_width = MAX_SCREEN_WIDTH // (grid_width + 5)  # Extra space for stats
     max_tile_height = MAX_SCREEN_HEIGHT // (grid_height + 6)  # Extra space for UI
     tile_size = min(max_tile_width, max_tile_height, TILE_SIZE)
     return max(tile_size, MIN_TILE_SIZE)  # Ensure the tile size is not too small
 
+
 def main():
     global TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
-    if input("Customize game settings? (y/n): ").lower() == 'y':
-        grid_width = int(input("Enter the grid width (default 6): ") or DEFAULT_GRID_WIDTH)
-        grid_height = int(input("Enter the grid height (default 12): ") or DEFAULT_GRID_HEIGHT)
-        required_group_number = int(input("Enter the required group number to clear (default 4): ") or 4)
+    if input("Customize game settings? (y/n): ").lower() == "y":
+        grid_width = int(
+            input("Enter the grid width (default 6): ") or DEFAULT_GRID_WIDTH
+        )
+        grid_height = int(
+            input("Enter the grid height (default 12): ") or DEFAULT_GRID_HEIGHT
+        )
+        required_group_number = int(
+            input("Enter the required group number to clear (default 4): ") or 4
+        )
         TILE_SIZE = calculate_tile_size(grid_width, grid_height)
         SCREEN_WIDTH = TILE_SIZE * (grid_width + 5)  # Grid + space for stats
         SCREEN_HEIGHT = TILE_SIZE * (grid_height + 6)  # Grid + extra space for UI
-        game = PuyoGame(grid_width=grid_width, grid_height=grid_height, required_group_number=required_group_number,TILE_SIZE=TILE_SIZE)
+        game = PuyoGame(
+            grid_width=grid_width,
+            grid_height=grid_height,
+            required_group_number=required_group_number,
+            TILE_SIZE=TILE_SIZE,
+        )
     else:
         game = PuyoGame()
 
